@@ -3,12 +3,25 @@ package com.springinaction.taco.entity;
 import lombok.Data;
 import org.hibernate.validator.constraints.CreditCardNumber;
 
+import javax.persistence.*;
 import javax.validation.constraints.Digits;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 @Data
-public class Order {
+@Entity
+@Table(name = "Taco_Order")
+public class Order implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @NotBlank(message = "deliveryName is required")
     private String deliveryName;
@@ -34,4 +47,18 @@ public class Order {
 
     @Digits(integer = 3, fraction = 0, message = "Invalid CVV")
     private String ccCVV;
+
+    @ManyToMany(targetEntity = Taco.class)
+    private List<Taco> tacos = new ArrayList<>();
+
+    private Date placedAt;
+
+    public void addDesign(Taco design) {
+        this.tacos.add(design);
+    }
+
+    @PrePersist
+    void placedAt() {
+        this.placedAt = new Date();
+    }
 }

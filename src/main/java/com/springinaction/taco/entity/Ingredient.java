@@ -1,22 +1,20 @@
 package com.springinaction.taco.entity;
 
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import com.springinaction.taco.entity.type.Type;
+import lombok.*;
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
 
 @Data
-@RequiredArgsConstructor
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
 public class Ingredient {
 
-    private final String id;
-    private final String name;
-    private final Type type;
-
-    public enum Type {
-        WRAP,
-        PROTEIN,
-        VEGGIES,
-        CHEESE,
-        SAUCE
-    }
+    @Id
+    private String id;
+    private String name;
+    private Type type;
 
 }

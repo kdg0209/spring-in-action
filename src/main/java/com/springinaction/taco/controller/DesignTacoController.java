@@ -1,40 +1,41 @@
 package com.springinaction.taco.controller;
 
 import com.springinaction.taco.entity.Ingredient;
+import com.springinaction.taco.entity.Order;
 import com.springinaction.taco.entity.Taco;
+import com.springinaction.taco.entity.type.Type;
+import com.springinaction.taco.repository.IngredientRepository;
+import com.springinaction.taco.repository.TacoRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.validation.Valid;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/design")
+@RequiredArgsConstructor
 public class DesignTacoController {
+
+    private final IngredientRepository ingredientRepository;
+    private final TacoRepository tacoRepository;
+
 
     @GetMapping
     public String showDesignForm(Model model) {
+        List<Ingredient> ingredients = new ArrayList<>();
+        ingredientRepository.findAll().forEach(item -> ingredients.add(item));
 
-        List<Ingredient> ingredients = Arrays.asList(
-                new Ingredient("A", "A WRAP Tortilla", Ingredient.Type.WRAP),
-                new Ingredient("B", "B CHEESE Tortilla", Ingredient.Type.CHEESE),
-                new Ingredient("C", "C PROTEIN Tortilla", Ingredient.Type.PROTEIN),
-                new Ingredient("D", "D VEGGIES Tortilla", Ingredient.Type.VEGGIES),
-                new Ingredient("E", "E WRAP Tortilla", Ingredient.Type.WRAP),
-                new Ingredient("F", "F CHEESE Tortilla", Ingredient.Type.CHEESE),
-                new Ingredient("G", "G PROTEIN Tortilla", Ingredient.Type.PROTEIN),
-                new Ingredient("H", "H PROTEIN Tortilla", Ingredient.Type.PROTEIN)
-        );
-
-        Ingredient.Type[] types = Ingredient.Type.values();
-
-        for (Ingredient.Type type : types) {
+        Type[] types = Type.values();
+        for (Type type : types) {
             model.addAttribute(type.toString().toLowerCase(), filterByTpe(ingredients, type));
         }
 
@@ -42,17 +43,29 @@ public class DesignTacoController {
         return "/main/design";
     }
 
+    @ModelAttribute(name = "order")
+    public Order order() {
+        return new Order();
+    }
+
+    @ModelAttribute(name = "taco")
+    public Taco taco() {
+        return new Taco();
+    }
+
     @PostMapping
-    public String processDesign(@Valid Taco taco, Errors errors) {
+    public String processDesign(@Valid Taco taco, Errors errors, @ModelAttribute Order order) {
 
         if (errors.hasErrors()) {
             return "/main/design";
         }
 
+        Taco savedTaco = tacoRepository.save(taco);
+        order.addDesign(savedTaco);
         return "redirect:/orders/current";
     }
 
-    private List<Ingredient> filterByTpe(List<Ingredient> ingredients, Ingredient.Type type) {
+    private List<Ingredient> filterByTpe(List<Ingredient> ingredients, Type type) {
         return ingredients.stream().filter(item -> item.getType().equals(type)).collect(Collectors.toList());
     }
 }
