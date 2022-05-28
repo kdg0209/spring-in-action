@@ -3,9 +3,11 @@ package com.springinaction.taco.controller;
 import com.springinaction.taco.entity.Ingredient;
 import com.springinaction.taco.entity.Order;
 import com.springinaction.taco.entity.Taco;
+import com.springinaction.taco.entity.User;
 import com.springinaction.taco.entity.type.Type;
 import com.springinaction.taco.repository.IngredientRepository;
 import com.springinaction.taco.repository.TacoRepository;
+import com.springinaction.taco.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.validation.Valid;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,10 +30,10 @@ public class DesignTacoController {
 
     private final IngredientRepository ingredientRepository;
     private final TacoRepository tacoRepository;
-
+    private final UserRepository userRepository;
 
     @GetMapping
-    public String showDesignForm(Model model) {
+    public String showDesignForm(Model model, Principal principal) {
         List<Ingredient> ingredients = new ArrayList<>();
         ingredientRepository.findAll().forEach(item -> ingredients.add(item));
 
@@ -39,7 +42,9 @@ public class DesignTacoController {
             model.addAttribute(type.toString().toLowerCase(), filterByTpe(ingredients, type));
         }
 
-        model.addAttribute("taco", new Taco());
+        String username = principal.getName();
+        User user = userRepository.findByUsername(username);
+        model.addAttribute("user", user);
         return "/main/design";
     }
 

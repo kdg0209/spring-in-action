@@ -1,21 +1,34 @@
 package com.springinaction.taco.config;
 
+import com.springinaction.taco.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
-import javax.sql.DataSource;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-    private final DataSource dataSource;
+    private final UserService userService;
+
+    @Bean
+    public PasswordEncoder encoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Override
+    public void configure(AuthenticationManagerBuilder builder) throws Exception {
+        builder.userDetailsService(userService)
+               .passwordEncoder(encoder());
+    }
 
     @Override
     public void configure(HttpSecurity http) throws Exception {
@@ -23,14 +36,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers("/design/**", "/orders").hasRole("USER")
             .antMatchers("/", "/**").permitAll()
             .and()
-            .httpBasic();
+                .formLogin()
+                .loginPage("/login")
+            .and()
+                .logout()
+                .logoutSuccessUrl("/")
+            .and()
+                .csrf();
     }
 
-    @Override
-    public void configure(AuthenticationManagerBuilder auth) throws Exception {
-            auth.jdbcAuthentication().dataSource(dataSource)
-                    .usersByUsernameQuery("SELECT username, password, enabled from users WHERE username = ?")
-                    .authoritiesByUsernameQuery("SELECT username, authority FROM authorities WHERE username = ? ")
-                    .passwordEncoder(new NoEncodingPasswordEncoder());
-    }
+
 }

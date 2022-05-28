@@ -53,6 +53,9 @@ public class Order implements Serializable {
 
     private Date placedAt;
 
+    @ManyToOne
+    private User user;
+
     public void addDesign(Taco design) {
         this.tacos.add(design);
     }
